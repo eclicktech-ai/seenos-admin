@@ -174,7 +174,7 @@ export function UsersPage() {
                       </TableCell>
                       <TableCell>
                         <span className="font-mono text-sm">
-                          ${user.totalCost.toFixed(2)}
+                          ${(user.totalCost ?? 0).toFixed(2)}
                         </span>
                       </TableCell>
                       <TableCell>
