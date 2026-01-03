@@ -44,7 +44,20 @@ yarn dev
 
 The app will be available at http://localhost:3001
 
-**Note**: The development server proxies `/api/*` to `http://localhost:8000` automatically. Make sure the SeenOS backend is running.
+**重要**: 后端服务必须使用域名，不能使用 `localhost`。
+
+**配置后端域名**:
+
+1. 创建 `.env` 文件:
+   ```bash
+   ADMIN_BACKEND_URL=http://api.example.com:8000
+   # 或使用 HTTPS
+   ADMIN_BACKEND_URL=https://api.example.com
+   ```
+
+2. 确保后端服务可通过该域名访问
+
+**Note**: 开发服务器会通过 Vite proxy 将 `/api/*` 代理到 `ADMIN_BACKEND_URL`。如果未设置，默认使用 `http://localhost:8000`（不推荐）。`secure` 选项会根据 URL 协议自动设置（HTTPS 为 true，HTTP 为 false）。
 
 ### Build for production
 
@@ -59,6 +72,8 @@ yarn preview
 ```
 
 ## Docker Deployment
+
+> 📖 **详细部署文档**: 查看 [测试环境部署文档](docs/TEST_ENV_DEPLOYMENT.md) 获取完整的部署指南、故障排查和配置说明。
 
 ### Quick Start (Standalone)
 
@@ -95,19 +110,27 @@ docker build -f deploy/Dockerfile --build-arg VITE_API_URL=https://api.example.c
 Create a `.env` file in the project root:
 
 ```bash
-# Backend API URL
+# 后端服务域名（开发环境必须配置，不能使用 localhost）
+ADMIN_BACKEND_URL=http://api.example.com:8000
+# 或使用 HTTPS（会自动设置 secure: true）
+ADMIN_BACKEND_URL=https://api.example.com
+
+# 前端 API 路径前缀（构建时使用）
 VITE_API_URL=/api
 ```
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `VITE_API_URL` | Backend API URL | `/api` |
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `ADMIN_BACKEND_URL` | 后端服务域名（开发环境 Vite proxy 目标） | `http://localhost:8000` | 推荐配置 |
+| `VITE_API_URL` | 前端 API 路径前缀（构建时使用） | `/api` | 否 |
 
 ### API URL Configuration
 
 **Development** (`yarn dev`):
-- No configuration needed
-- Vite proxies `/api/*` to `http://localhost:8000` automatically
+- **必须配置**: 创建 `.env` 文件，设置 `ADMIN_BACKEND_URL` 为后端域名
+- Vite proxies `/api/*` 到 `ADMIN_BACKEND_URL` 指定的地址
+- **不能使用 localhost**，必须使用域名
+- 如果使用 HTTPS，`secure` 会自动设置为 `true`
 
 **Production with Nginx** (recommended):
 - Set `VITE_API_URL=/api`
@@ -193,4 +216,3 @@ The admin dashboard uses the following backend APIs:
 2. Use TypeScript strictly
 3. Write descriptive commit messages
 4. Test your changes before submitting
-# seenos-admin

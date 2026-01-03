@@ -1,10 +1,18 @@
-# SeenOS Admin Dashboard - Production Build
+# SeenOS Admin Dashboard - Build Only
+#
+# This Dockerfile only builds the application, does not include nginx runtime.
+# The built files are output to /app/dist
 #
 # Build from project root:
-#   docker build -f deploy/Dockerfile -t seenos-admin .
+#   docker build -f deploy/Dockerfile -t seenos-admin:build .
 #
 # Custom API URL:
-#   docker build -f deploy/Dockerfile --build-arg VITE_API_URL=https://api.example.com/api -t seenos-admin .
+#   docker build -f deploy/Dockerfile --build-arg VITE_API_URL=https://api.example.com/api -t seenos-admin:build .
+#
+# Extract built files:
+#   docker create --name temp seenos-admin:build
+#   docker cp temp:/app/dist ./dist
+#   docker rm temp
 
 # Build stage
 FROM node:20-alpine AS builder
@@ -30,21 +38,7 @@ COPY . .
 # Build the application
 RUN yarn build
 
-# Production stage
-FROM nginx:alpine
-
-# Install curl for healthcheck
-RUN apk add --no-cache curl
-
-# Copy nginx configuration (will be overwritten by volume mount if needed)
-COPY --from=builder /app/nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copy built assets from builder
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Expose port
-EXPOSE 80
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# This Dockerfile only builds the application
+# The built files are in /app/dist
+# Use a separate nginx container or volume mount to serve the files
 

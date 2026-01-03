@@ -1,37 +1,80 @@
-# SeenOS Admin Dashboard - Standalone Docker Compose
+# SeenOS Admin Dashboard with API
 #
-# 单独部署 Admin Dashboard，后端运行在本机
-#
-# 使用方法:
+# Usage:
 #   cd deploy
-#   docker-compose up -d          # 后台启动
-#   docker-compose up --build     # 重新构建
-#   docker-compose logs -f        # 查看日志
-#   docker-compose down           # 停止
+#   docker-compose up -d          # Build and start all services
+#   docker-compose up --build    # Rebuild and start
+#   docker-compose logs -f        # View logs
+#   docker-compose down           # Stop services
 #
-# 访问: http://localhost:3001
-# 
-# 前提: 后端已在本机 http://localhost:8000 运行
+# Access:
+#   - Admin UI: http://localhost:3001
+#   - API: http://localhost:8002
+#
+# Note: Create .env.test file in deploy/ directory for API configuration
 
 services:
-  admin:
-    container_name: seenos_admin
+  # Build service - builds the application
+  builder:
+    container_name: seenos_admin_builder
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    volumes:
+      # Mount dist directory to share built files
+      - dist:/app/dist
+    command: sh -c "echo 'Build completed, files in /app/dist'"
+
+  # Server service - runs yarn server (vite preview)
+  server:
+    container_name: seenos_admin_ui
     build:
       context: ..
       dockerfile: deploy/Dockerfile
     ports:
-      - "3001:80"
+      - "3001:3001"
     volumes:
-      # 使用 standalone 配置连接到本机后端
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    # Mac/Windows Docker Desktop 自动支持 host.docker.internal
-    # Linux 需要添加此配置:
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      # Mount dist directory from builder
+      - dist:/app/dist:ro
+    working_dir: /app
+    command: sh -c "yarn server"
+    depends_on:
+      - builder
+    networks:
+      - seenos-test-net
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+
+  # API service
+  seenos-api:
+    container_name: seenos_test
+    image: seenos-test:1.0.0
+    ports:
+      - "8002:8000"
+    env_file:
+      - .env.test
+    environment:
+      # Core settings (fixed for test env)
+      - SEENOS_ENV=test
+      - SEENOS_MODE=distributed
+
+      # Service backends
+      - SEENOS_CACHE_BACKEND=redis
+      - SEENOS_SEARCH_BACKEND=pgvector
+      - SEENOS_KB_BACKEND=json
+
+      # Internal service URLs (fixed)
+      # Note: redis and postgres services are defined in another docker-compose.yaml
+      - SEENOS_REDIS_URL=redis://redis:6379/0
+      - SEENOS_POSTGRES_URL=postgresql://seenos:seenosqaz2026@postgres:5432/seenos
+    networks:
+      - seenos-test-net
+    restart: unless-stopped
+
+volumes:
+  dist:
+
+networks:
+  # seenos-test-net is defined in another docker-compose.yaml
+  seenos-test-net:
+    external: true
 

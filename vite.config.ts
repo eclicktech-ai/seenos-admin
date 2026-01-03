@@ -28,9 +28,20 @@ export default defineConfig({
     port: 3001,
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        target: process.env.ADMIN_BACKEND_URL || "http://localhost:8000",
         changeOrigin: true,
-        secure: false,
+        secure: (process.env.ADMIN_BACKEND_URL || "http://localhost:8000").startsWith("https://"),
+      },
+    },
+  },
+  preview: {
+    port: 3001,
+    host: "0.0.0.0",
+    proxy: {
+      "/api": {
+        target: process.env.ADMIN_BACKEND_URL || "http://seenos-api:8000",
+        changeOrigin: true,
+        secure: (process.env.ADMIN_BACKEND_URL || "http://seenos-api:8000").startsWith("https://"),
       },
     },
   },
