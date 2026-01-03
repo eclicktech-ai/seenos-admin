@@ -37,6 +37,11 @@ export default defineConfig({
   preview: {
     port: 3001,
     host: "0.0.0.0",
+    allowedHosts: [
+      "ui.seokit.tech",
+      "localhost",
+      ".seokit.tech",
+    ],
     proxy: {
       "/api": {
         target: process.env.ADMIN_BACKEND_URL || "http://seenos-api:8000",
