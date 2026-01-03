@@ -14,7 +14,7 @@
 # Note: Create .env.test file in deploy/ directory for API configuration
 
 services:
-  # Build service - builds the application
+  # Build service - builds the application and copies to volume
   builder:
     container_name: seenos_admin_builder
     build:
@@ -22,8 +22,8 @@ services:
       dockerfile: deploy/Dockerfile
     volumes:
       # Mount dist directory to share built files
-      - dist:/app/dist
-    command: sh -c "echo 'Build completed, files in /app/dist'"
+      - dist:/output
+    command: sh -c "cp -r /app/dist/* /output/ 2>/dev/null || echo 'Build files already in volume' && echo 'Build completed, files in /output'"
 
   # Server service - runs yarn server (vite preview)
   server:
@@ -46,7 +46,7 @@ services:
 
   # API service
   seenos-api:
-    container_name: seenos_test
+    container_name: seenos_test_api
     image: seenos-test:1.0.0
     ports:
       - "8002:8000"
@@ -75,6 +75,8 @@ volumes:
 
 networks:
   # seenos-test-net is defined in another docker-compose.yaml
+  # The actual network name may be deploy_seenos-test-net (with project prefix)
   seenos-test-net:
     external: true
+    name: deploy_seenos-test-net
 

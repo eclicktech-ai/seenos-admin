@@ -179,24 +179,37 @@ log_success "Docker environment check passed"
 
 # Step 2: Handle --down flag
 if [ "$DOWN_FLAG" = true ]; then
+    # Set project name for isolation
+    if [ -z "$ENVIRONMENT" ]; then
+        ENVIRONMENT="test"
+    fi
+    PROJECT_NAME="seenos-admin-${ENVIRONMENT}"
     log_info "Stopping and removing containers (only services defined in this compose file)..."
-    # Only remove containers defined in this compose file, not orphans from other compose files
-    run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE down"
+    # Use project name to isolate from other compose files
+    run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE -p $PROJECT_NAME down"
     log_success "Containers stopped and removed"
     exit 0
 fi
 
 # Step 3: Handle --logs flag
 if [ "$LOGS_FLAG" = true ]; then
+    if [ -z "$ENVIRONMENT" ]; then
+        ENVIRONMENT="test"
+    fi
+    PROJECT_NAME="seenos-admin-${ENVIRONMENT}"
     log_info "Showing logs (Ctrl+C to exit)..."
-    run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE logs -f"
+    run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE -p $PROJECT_NAME logs -f"
     exit 0
 fi
 
 # Step 4: Handle --restart flag
 if [ "$RESTART_FLAG" = true ]; then
+    if [ -z "$ENVIRONMENT" ]; then
+        ENVIRONMENT="test"
+    fi
+    PROJECT_NAME="seenos-admin-${ENVIRONMENT}"
     log_info "Restarting services..."
-    run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE restart"
+    run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE -p $PROJECT_NAME restart"
     log_success "Services restarted"
     exit 0
 fi
@@ -210,28 +223,44 @@ fi
 
 log_info "Deployment environment: $ENVIRONMENT"
 
-# Step 6: Check .env.test file for API service
+# Set project name to isolate from other compose files
+PROJECT_NAME="seenos-admin-${ENVIRONMENT}"
+export COMPOSE_PROJECT_NAME="$PROJECT_NAME"
+
+log_info "Project name: $PROJECT_NAME"
+
+# Step 6: Check network exists
+log_info "Checking network: deploy_seenos-test-net..."
+# The network is created by another docker-compose.yaml and named with project prefix
+if ! docker network ls | grep -q "deploy_seenos-test-net"; then
+    log_warning "Network 'deploy_seenos-test-net' not found"
+    log_info "Please ensure the other docker-compose.yaml has created this network"
+    log_info "Or create it manually: docker network create deploy_seenos-test-net"
+else
+    log_success "Network 'deploy_seenos-test-net' exists"
+fi
+
+# Step 7: Check .env.test file for API service
 if [ ! -f ".env.test" ]; then
     log_warning ".env.test file not found in deploy/ directory"
     log_info "API service may not start correctly without .env.test"
 fi
 
-# Step 7: Build images
-if [ "$BUILD_FLAG" = true ]; then
-    log_info "Building Docker images..."
-    run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE build $NO_CACHE_FLAG $PULL_FLAG"
-    log_success "Image build completed"
-fi
+# Step 8: Build images (always build to ensure latest code)
+log_info "Building Docker images..."
+run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE -p $PROJECT_NAME build $NO_CACHE_FLAG $PULL_FLAG"
+log_success "Image build completed"
 
-# Step 8: Stop old containers (only stop services defined in this compose file)
+# Step 9: Stop old containers (only stop services defined in this compose file)
 log_info "Stopping containers..."
-run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE stop"
+# Only stop containers that match our project name
+run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE -p $PROJECT_NAME stop" || log_warning "Some containers may not exist yet"
 
-# Step 9: Start new containers
+# Step 10: Start new containers
 log_info "Starting services..."
-run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE up -d"
+run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE -p $PROJECT_NAME up -d"
 
-# Step 10: Wait for services to start
+# Step 11: Wait for services to start
 if [ "$DRY_RUN" = false ]; then
     log_info "Waiting for services to start..."
     sleep 5
@@ -250,7 +279,7 @@ if [ "$DRY_RUN" = false ]; then
     done
 fi
 
-# Step 11: Display deployment information
+# Step 12: Display deployment information
 echo ""
 echo "============================================"
 log_success "Deployment completed!"
