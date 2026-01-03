@@ -179,8 +179,9 @@ log_success "Docker environment check passed"
 
 # Step 2: Handle --down flag
 if [ "$DOWN_FLAG" = true ]; then
-    log_info "Stopping and removing containers..."
-    run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE down --remove-orphans"
+    log_info "Stopping and removing containers (only services defined in this compose file)..."
+    # Only remove containers defined in this compose file, not orphans from other compose files
+    run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE down"
     log_success "Containers stopped and removed"
     exit 0
 fi
@@ -222,9 +223,9 @@ if [ "$BUILD_FLAG" = true ]; then
     log_success "Image build completed"
 fi
 
-# Step 8: Stop old containers
-log_info "Stopping old containers..."
-run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE down --remove-orphans"
+# Step 8: Stop old containers (only stop services defined in this compose file)
+log_info "Stopping containers..."
+run_cmd "$DOCKER_COMPOSE -f $COMPOSE_FILE stop"
 
 # Step 9: Start new containers
 log_info "Starting services..."
