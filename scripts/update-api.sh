@@ -2,7 +2,7 @@
 # ============================================================
 # SeenOS API Update Script
 # ============================================================
-# Purpose: Restart seenos-api service with latest local image
+# Purpose: Restart seenos-test-api service with latest local image
 # 
 # Note: Image is built by another project (seenos-nexus).
 #       This script only restarts the container to use the latest image.
@@ -137,7 +137,8 @@ else
 fi
 
 log_info "Starting new container..."
-if docker compose up -d seenos-api; then
+# Use -p to isolate project, avoid affecting other containers
+if docker compose -p seenos-admin up -d seenos-test-api; then
     log_success "Container started successfully"
 else
     log_error "Failed to start container"
@@ -155,11 +156,11 @@ if [ "$SKIP_VERIFY" = false ]; then
     
     # Check container status
     log_info "Checking container status..."
-    if docker compose ps seenos-api | grep -q "Up"; then
+    if docker compose -p seenos-admin ps seenos-test-api | grep -q "Up"; then
         log_success "Container is running"
     else
         log_error "Container is not running"
-        docker compose ps seenos-api
+        docker compose -p seenos-admin ps seenos-test-api
         exit 1
     fi
     
@@ -180,7 +181,7 @@ if [ "$SKIP_VERIFY" = false ]; then
             else
                 log_error "API health check failed (retried $MAX_RETRIES times)"
                 log_info "Container logs:"
-                docker compose logs --tail=20 seenos-api
+                docker compose -p seenos-admin logs --tail=20 seenos-test-api
                 exit 1
             fi
         fi
@@ -188,12 +189,12 @@ if [ "$SKIP_VERIFY" = false ]; then
     
     # Show container info
     log_info "Container info:"
-    docker compose ps seenos-api
+    docker compose -p seenos-admin ps seenos-test-api
     echo ""
     
     # Show recent logs
     log_info "Recent logs (last 10 lines):"
-    docker compose logs --tail=10 seenos-api
+    docker compose -p seenos-admin logs --tail=10 seenos-test-api
     echo ""
 else
     log_warning "[3/3] Skipping verification step"
@@ -210,7 +211,7 @@ log_info "  - API URL: http://127.0.0.1:8002"
 log_info "  - Health check: http://127.0.0.1:8002/health"
 echo ""
 log_info "Useful commands:"
-log_info "  View logs: docker compose -f $ADMIN_DEPLOY_DIR/docker-compose.yml logs -f seenos-api"
-log_info "  View status: docker compose -f $ADMIN_DEPLOY_DIR/docker-compose.yml ps seenos-api"
-log_info "  Restart: docker compose -f $ADMIN_DEPLOY_DIR/docker-compose.yml restart seenos-api"
+log_info "  View logs: docker compose -p seenos-admin -f $ADMIN_DEPLOY_DIR/docker-compose.yml logs -f seenos-test-api"
+log_info "  View status: docker compose -p seenos-admin -f $ADMIN_DEPLOY_DIR/docker-compose.yml ps seenos-test-api"
+log_info "  Restart: docker compose -p seenos-admin -f $ADMIN_DEPLOY_DIR/docker-compose.yml restart seenos-test-api"
 echo ""
