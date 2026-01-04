@@ -117,17 +117,17 @@ echo ""
 log_info "[2/3] Restarting container..."
 cd "$ADMIN_DEPLOY_DIR"
 
-# Check if container exists
+# Check if container exists (use docker directly, not compose)
 if docker ps -a --format "{{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
     log_info "Stopping old container..."
-    if docker compose stop seenos-api 2>/dev/null; then
+    if docker stop "$CONTAINER_NAME" 2>/dev/null; then
         log_success "Container stopped"
     else
         log_warning "Failed to stop container (may already be stopped)"
     fi
     
     log_info "Removing old container..."
-    if docker compose rm -f seenos-api 2>/dev/null; then
+    if docker rm -f "$CONTAINER_NAME" 2>/dev/null; then
         log_success "Container removed"
     else
         log_warning "Failed to remove container (may not exist)"
