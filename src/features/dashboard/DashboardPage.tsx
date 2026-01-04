@@ -402,7 +402,7 @@ export function DashboardPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>Cost</span>
-                      <span>${usage.cost.toFixed(4)}</span>
+                      <span>${(usage.cost ?? 0).toFixed(4)}</span>
                     </div>
                   </div>
                 </div>

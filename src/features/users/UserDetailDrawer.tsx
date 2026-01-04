@@ -153,7 +153,7 @@ export function UserDetailDrawer({ user, onClose }: UserDetailDrawerProps) {
                     <Hash className={`h-4 w-4 ${iconContainerColors.green.text}`} />
                     <span className="text-sm">Total Cost</span>
                   </div>
-                  <p className="text-2xl font-bold">${user.totalCost.toFixed(2)}</p>
+                  <p className="text-2xl font-bold">${(user.totalCost ?? 0).toFixed(2)}</p>
                 </div>
               </div>
 
