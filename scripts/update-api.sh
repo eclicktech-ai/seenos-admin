@@ -138,7 +138,7 @@ fi
 
 log_info "Starting new container..."
 # Use -p to isolate project, avoid affecting other containers
-if docker compose -p seenos-admin up -d seenos-test-api; then
+if docker compose -p seenos-admin -f docker-compose.yml up -d seenos-test-api; then
     log_success "Container started successfully"
 else
     log_error "Failed to start container"
@@ -156,11 +156,11 @@ if [ "$SKIP_VERIFY" = false ]; then
     
     # Check container status
     log_info "Checking container status..."
-    if docker compose -p seenos-admin ps seenos-test-api | grep -q "Up"; then
+    if docker compose -p seenos-admin -f docker-compose.yml ps seenos-test-api | grep -q "Up"; then
         log_success "Container is running"
     else
         log_error "Container is not running"
-        docker compose -p seenos-admin ps seenos-test-api
+        docker compose -p seenos-admin -f docker-compose.yml ps seenos-test-api
         exit 1
     fi
     
@@ -181,7 +181,7 @@ if [ "$SKIP_VERIFY" = false ]; then
             else
                 log_error "API health check failed (retried $MAX_RETRIES times)"
                 log_info "Container logs:"
-                docker compose -p seenos-admin logs --tail=20 seenos-test-api
+                docker compose -p seenos-admin -f docker-compose.yml logs --tail=20 seenos-test-api
                 exit 1
             fi
         fi
@@ -189,12 +189,12 @@ if [ "$SKIP_VERIFY" = false ]; then
     
     # Show container info
     log_info "Container info:"
-    docker compose -p seenos-admin ps seenos-test-api
+    docker compose -p seenos-admin -f docker-compose.yml ps seenos-test-api
     echo ""
     
     # Show recent logs
     log_info "Recent logs (last 10 lines):"
-    docker compose -p seenos-admin logs --tail=10 seenos-test-api
+    docker compose -p seenos-admin -f docker-compose.yml logs --tail=10 seenos-test-api
     echo ""
 else
     log_warning "[3/3] Skipping verification step"
