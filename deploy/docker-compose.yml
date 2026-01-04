@@ -10,7 +10,7 @@
 #   cd deploy
 #   docker-compose build builder              # Build frontend
 #   docker-compose run --rm builder          # Generate static files
-#   docker-compose up -d seenos-api         # Start API service
+#   docker-compose up -d seenos-test-api    # Start API service
 #
 # Access:
 #   - Admin UI: http://ui.seokit.tech (via Physical Nginx)
@@ -36,7 +36,7 @@ services:
       - seenos-test-net
 
   # API service - backend API (accessible externally)
-  seenos-api:
+  seenos-test-api:
     container_name: seenos_test_api
     image: seenos-test:1.0.0
     ports:
