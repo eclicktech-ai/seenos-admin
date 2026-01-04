@@ -1,54 +1,47 @@
 # SeenOS Admin Dashboard with API
+# Optimized for Physical Nginx Deployment
+#
+# Architecture:
+#   - Builder: Builds frontend and outputs to physical directory
+#   - API: Backend service (only accessible via localhost)
+#   - Physical Nginx: Serves static files and proxies API requests
 #
 # Usage:
 #   cd deploy
-#   docker-compose up -d          # Build and start all services
-#   docker-compose up --build    # Rebuild and start
-#   docker-compose logs -f        # View logs
-#   docker-compose down           # Stop services
+#   docker-compose build builder              # Build frontend
+#   docker-compose run --rm builder          # Generate static files
+#   docker-compose up -d seenos-api         # Start API service
 #
 # Access:
-#   - Admin UI: http://localhost:3001
-#   - API: http://localhost:8002
+#   - Admin UI: http://ui.seokit.tech (via Physical Nginx)
+#   - API: http://127.0.0.1:8002 (localhost only, proxied by Nginx)
 #
-# Note: Create .env.test file in deploy/ directory for API configuration
+# Note: 
+#   - Static files are output to /var/www/seenos-admin
+#   - Physical Nginx must be configured separately
+#   - Create .env.test file in deploy/ directory for API configuration
 
 services:
-  # Build service - builds the application and copies to volume
+  # Build service - builds the application and outputs to physical directory
   builder:
     container_name: seenos_admin_builder
     build:
       context: ..
       dockerfile: deploy/Dockerfile
     volumes:
-      # Mount dist directory to share built files
-      - dist:/output
-    command: sh -c "cp -r /app/dist/* /output/ 2>/dev/null || echo 'Build files already in volume' && echo 'Build completed, files in /output'"
-
-  # Server service - runs yarn server (vite preview)
-  server:
-    container_name: seenos_admin_ui
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile
-    ports:
-      - "3001:3001"
-    volumes:
-      # Mount dist directory from builder
-      - dist:/app/dist:ro
-    working_dir: /app
-    command: sh -c "yarn server"
-    depends_on:
-      - builder
+      # Mount to physical machine directory for Nginx to serve
+      - /var/www/seenos-admin:/output
+    command: sh -c "cp -r /app/dist/* /output/ && chmod -R 755 /output && echo 'Build completed, files in /output'"
     networks:
       - seenos-test-net
-    restart: unless-stopped
 
-  # API service
+  # API service - backend API (accessible externally)
   seenos-api:
     container_name: seenos_test_api
     image: seenos-test:1.0.0
     ports:
+      # Expose API port for external access
+      # Physical Nginx can also proxy requests to this port
       - "8002:8000"
     env_file:
       - .env.test
@@ -66,12 +59,15 @@ services:
       # Note: redis and postgres services are defined in another docker-compose.yaml
       - SEENOS_REDIS_URL=redis://redis:6379/0
       - SEENOS_POSTGRES_URL=postgresql://seenos:seenosqaz2026@postgres:5432/seenos
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:8000/health || curl -f http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - seenos-test-net
     restart: unless-stopped
-
-volumes:
-  dist:
 
 networks:
   # seenos-test-net is defined in another docker-compose.yaml
@@ -79,4 +75,3 @@ networks:
   seenos-test-net:
     external: true
     name: deploy_seenos-test-net
-
