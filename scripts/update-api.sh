@@ -100,7 +100,7 @@ echo ""
 
 # Step 1: Verify image exists
 log_info "[1/3] Verifying local image..."
-if docker images "$IMAGE_NAME" | grep -q "$IMAGE_NAME"; then
+if docker image inspect "$IMAGE_NAME" > /dev/null 2>&1; then
     IMAGE_ID=$(docker images --format "{{.ID}}" "$IMAGE_NAME" | head -1)
     CREATED_AT=$(docker images --format "{{.CreatedAt}}" "$IMAGE_NAME" | head -1)
     log_success "Image exists"
