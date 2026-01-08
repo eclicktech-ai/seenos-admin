@@ -11,6 +11,7 @@ import {
   X,
   BarChart3,
   Timer,
+  ThumbsUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -39,6 +40,7 @@ const menuItems: MenuItem[] = [
   { icon: Timer, labelKey: "nav.sessions", path: "/sessions" },
   { icon: Database, labelKey: "nav.context", path: "/context" },
   { icon: BarChart3, labelKey: "nav.analytics", path: "/analytics" },
+  { icon: ThumbsUp, labelKey: "nav.feedback", path: "/feedback" },
   {
     icon: Settings,
     labelKey: "nav.settings",

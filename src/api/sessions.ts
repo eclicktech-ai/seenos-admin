@@ -1,8 +1,11 @@
 import apiClient from "./client";
 import type {
+  SessionItem,
   SessionListResponse,
   SessionStats,
+  UserDurationRankItem,
   DurationRankingResponse,
+  DailySessionStats,
   SessionTrendsResponse,
 } from "@/types/session";
 
@@ -28,64 +31,29 @@ export interface TrendsParams {
   days?: number;
 }
 
-// Transform snake_case to camelCase
-function transformSession(data: Record<string, unknown>) {
-  return {
-    id: data.id,
-    userId: data.user_id,
-    userEmail: data.user_email,
-    userName: data.user_name,
-    deviceType: data.device_type,
-    startedAt: data.started_at,
-    lastActivityAt: data.last_activity_at,
-    endedAt: data.ended_at,
-    durationSeconds: data.duration_seconds,
-    pageViews: data.page_views,
-    messageCount: data.message_count,
-    ipAddress: data.ip_address,
-  };
-}
-
-function transformRankItem(data: Record<string, unknown>) {
-  return {
-    userId: data.user_id,
-    email: data.email,
-    name: data.name,
-    totalDurationSeconds: data.total_duration_seconds,
-    totalDurationFormatted: data.total_duration_formatted,
-    sessionCount: data.session_count,
-    avgDurationSeconds: data.avg_duration_seconds,
-    lastSessionAt: data.last_session_at,
-  };
-}
-
-function transformDailyStats(data: Record<string, unknown>) {
-  return {
-    date: data.date,
-    sessionCount: data.session_count,
-    uniqueUsers: data.unique_users,
-    totalDurationHours: data.total_duration_hours,
-  };
-}
-
 export const sessionsApi = {
   /**
    * List all sessions with filtering and pagination
    */
   list: async (params: SessionListParams = {}): Promise<SessionListResponse> => {
-    const response = await apiClient.get("/admin/sessions", {
+    const response = await apiClient.get<{
+      sessions: SessionItem[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>("/admin/sessions", {
       params: {
         limit: params.limit,
         offset: params.offset,
-        user_id: params.userId,
+        userId: params.userId,
         status: params.status,
-        device_type: params.deviceType,
+        deviceType: params.deviceType,
         days: params.days,
       },
     });
 
     return {
-      sessions: (response.data.sessions || []).map(transformSession),
+      sessions: response.data.sessions || [],
       total: response.data.total,
       limit: response.data.limit,
       offset: response.data.offset,
@@ -96,27 +64,21 @@ export const sessionsApi = {
    * Get session statistics
    */
   getStats: async (params: SessionStatsParams = {}): Promise<SessionStats> => {
-    const response = await apiClient.get("/admin/sessions/stats", {
+    const response = await apiClient.get<SessionStats>("/admin/sessions/stats", {
       params: { days: params.days },
     });
-
-    const data = response.data;
-    return {
-      totalSessions: data.total_sessions,
-      activeSessions: data.active_sessions,
-      totalDurationHours: data.total_duration_hours,
-      avgDurationMinutes: data.avg_duration_minutes,
-      totalPageViews: data.total_page_views,
-      totalMessages: data.total_messages,
-      uniqueUsers: data.unique_users,
-    };
+    return response.data;
   },
 
   /**
    * Get user duration ranking
    */
   getRanking: async (params: RankingParams = {}): Promise<DurationRankingResponse> => {
-    const response = await apiClient.get("/admin/sessions/ranking", {
+    const response = await apiClient.get<{
+      users: UserDurationRankItem[];
+      total: number;
+      since?: string;
+    }>("/admin/sessions/ranking", {
       params: {
         limit: params.limit,
         days: params.days,
@@ -124,7 +86,7 @@ export const sessionsApi = {
     });
 
     return {
-      users: (response.data.users || []).map(transformRankItem),
+      users: response.data.users || [],
       total: response.data.total,
       since: response.data.since,
     };
@@ -134,12 +96,15 @@ export const sessionsApi = {
    * Get session trends for charts
    */
   getTrends: async (params: TrendsParams = {}): Promise<SessionTrendsResponse> => {
-    const response = await apiClient.get("/admin/sessions/trends", {
+    const response = await apiClient.get<{
+      dailyStats: DailySessionStats[];
+      days: number;
+    }>("/admin/sessions/trends", {
       params: { days: params.days },
     });
 
     return {
-      dailyStats: (response.data.daily_stats || []).map(transformDailyStats),
+      dailyStats: response.data.dailyStats || [],
       days: response.data.days,
     };
   },

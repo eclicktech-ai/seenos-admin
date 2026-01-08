@@ -81,6 +81,7 @@ export const en = {
     sessions: "Sessions",
     context: "Context",
     analytics: "Analytics",
+    feedback: "Feedback",
     settings: "Settings",
     agents: "Agents",
     tools: "Tools",
@@ -271,6 +272,30 @@ export const en = {
     noLogsDescription: "System operation logs will be displayed here",
     allActions: "All Actions",
     allTypes: "All Types",
+  },
+
+  // Feedback
+  feedback: {
+    title: "User Feedback",
+    description: "View and analyze user feedback on agent responses",
+    totalCount: "Total Feedback",
+    likeCount: "Likes",
+    dislikeCount: "Dislikes",
+    likeRatio: "Like Ratio",
+    trend: "Feedback Trend",
+    byModel: "By Model",
+    reason: "Feedback Reason",
+    userInput: "User Input",
+    assistantOutput: "Assistant Output",
+    toolsUsed: "Tools Used",
+    conversationHistory: "Conversation History",
+    exportJsonl: "Export JSONL",
+    noFeedback: "No Feedback",
+    noFeedbackYet: "No feedback data available yet",
+    allTypes: "All Types",
+    likesOnly: "Likes Only",
+    dislikesOnly: "Dislikes Only",
+    details: "Feedback Details",
   },
 
   // Date Range

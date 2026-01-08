@@ -21,93 +21,69 @@ export interface ConversationDetailResponse {
   files: ConversationFile[];
 }
 
+interface ConversationListApiResponse {
+  items: Conversation[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+interface ConversationDetailApiResponse {
+  cid: string;
+  userId: string;
+  projectId?: string;
+  title?: string;
+  status: string;
+  messageCount: number;
+  messages: Array<{
+    id: string;
+    role: string;
+    content: string;
+    createdAt: string;
+  }>;
+  files: ConversationFile[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const conversationsApi = {
   list: async (params: ConversationListParams = {}): Promise<ConversationListResponse> => {
-    const response = await apiClient.get<{
-      items: Array<{
-        cid: string;
-        user_id: string;
-        project_id?: string;
-        title?: string;
-        status: string;
-        message_count: number;
-        file_count: number;
-        created_at: string;
-        updated_at: string;
-      }>;
-      total: number;
-      limit: number;
-      offset: number;
-    }>("/admin/conversations", { params });
+    const response = await apiClient.get<ConversationListApiResponse>(
+      "/admin/conversations",
+      { params }
+    );
     return {
-      items: response.data.items.map((c) => ({
-        cid: c.cid,
-        userId: c.user_id,
-        title: c.title,
-        status: c.status,
-        messageCount: c.message_count,
-        fileCount: c.file_count || 0,
-        createdAt: c.created_at,
-        updatedAt: c.updated_at,
-      })),
+      items: response.data.items,
       total: response.data.total,
     };
   },
 
   get: async (cid: string): Promise<ConversationDetailResponse> => {
-    const response = await apiClient.get<{
-      cid: string;
-      user_id: string;
-      project_id?: string;
-      title?: string;
-      status: string;
-      message_count: number;
-      messages: Array<{
-        id: string;
-        role: string;
-        content: string;
-        created_at: string;
-      }>;
-      files: Array<{
-        path: string;
-        language?: string;
-        is_binary: boolean;
-        file_size?: number;
-        download_url?: string;
-        updated_at: string;
-      }>;
-      created_at: string;
-      updated_at: string;
-    }>(`/admin/conversations/${cid}`);
-    
+    const response = await apiClient.get<ConversationDetailApiResponse>(
+      `/admin/conversations/${cid}`
+    );
+
     const data = response.data;
     const files = data.files || [];
     return {
       conversation: {
         cid: data.cid,
-        userId: data.user_id,
+        userId: data.userId,
         title: data.title,
         status: data.status,
-        messageCount: data.message_count,
+        messageCount: data.messageCount,
         fileCount: files.length,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
       },
       messages: data.messages.map((m) => ({
         id: m.id,
         cid: data.cid,
         role: m.role as "user" | "assistant" | "system",
         content: m.content,
-        createdAt: m.created_at,
+        createdAt: m.createdAt,
       })),
-      files: files.map((f) => ({
-        path: f.path,
-        language: f.language,
-        isBinary: f.is_binary,
-        fileSize: f.file_size,
-        downloadUrl: f.download_url,
-        updatedAt: f.updated_at,
-      })),
+      files,
     };
   },
 

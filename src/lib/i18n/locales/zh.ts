@@ -83,6 +83,7 @@ export const zh: Translations = {
     sessions: "会话",
     context: "上下文",
     analytics: "数据分析",
+    feedback: "用户反馈",
     settings: "系统设置",
     agents: "智能体",
     tools: "工具",
@@ -273,6 +274,30 @@ export const zh: Translations = {
     noLogsDescription: "系统操作日志将在此显示",
     allActions: "全部操作",
     allTypes: "全部类型",
+  },
+
+  // Feedback
+  feedback: {
+    title: "用户反馈",
+    description: "查看和分析用户对 Agent 回复的反馈",
+    totalCount: "总反馈数",
+    likeCount: "点赞数",
+    dislikeCount: "踩数",
+    likeRatio: "好评率",
+    trend: "反馈趋势",
+    byModel: "按模型统计",
+    reason: "反馈原因",
+    userInput: "用户输入",
+    assistantOutput: "助手回复",
+    toolsUsed: "使用的工具",
+    conversationHistory: "对话历史",
+    exportJsonl: "导出 JSONL",
+    noFeedback: "暂无反馈",
+    noFeedbackYet: "系统中暂无反馈数据",
+    allTypes: "全部类型",
+    likesOnly: "仅点赞",
+    dislikesOnly: "仅踩",
+    details: "反馈详情",
   },
 
   // Date Range

@@ -42,6 +42,11 @@ const SessionsPage = lazy(() =>
     default: mod.SessionsPage,
   }))
 );
+const FeedbackPage = lazy(() =>
+  import("@/features/feedback/FeedbackPage").then((mod) => ({
+    default: mod.FeedbackPage,
+  }))
+);
 
 function RouteFallback() {
   return (
@@ -95,6 +100,10 @@ export const router = createBrowserRouter([
       {
         path: "sessions",
         element: withSuspense(<SessionsPage />),
+      },
+      {
+        path: "feedback",
+        element: withSuspense(<FeedbackPage />),
       },
       {
         path: "config/*",

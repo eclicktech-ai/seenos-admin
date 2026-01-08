@@ -1,6 +1,7 @@
 import apiClient from "./client";
 import type {
   UserListResponse,
+  UserListItem,
   TokenUsageSummary,
   DailyUsage,
   TopUser,
@@ -44,18 +45,18 @@ export interface UserListParams {
   search?: string;
 }
 
-// Response type from admin/users endpoint
+// Response type from admin/users endpoint (now uses camelCase)
 interface AdminUserListResponse {
   users: Array<{
     id: string;
     email: string;
     name?: string;
-    is_admin: boolean;
-    is_banned: boolean;
-    total_tokens: number;
-    total_cost: number;
-    last_active_at?: string;
-    created_at: string;
+    isAdmin: boolean;
+    isBanned: boolean;
+    totalTokens: number;
+    totalCost: number;
+    lastActiveAt?: string;
+    createdAt: string;
   }>;
   total: number;
   limit: number;
@@ -87,6 +88,7 @@ export const usageApi = {
     );
     return response.data;
   },
+
   // Use admin/users for user listing with details
   getUsers: async (params: UserListParams = {}): Promise<UserListResponse> => {
     // Try the new admin/users endpoint first, fallback to admin/usage/users
@@ -94,17 +96,17 @@ export const usageApi = {
       const response = await apiClient.get<AdminUserListResponse>("/admin/users", {
         params,
       });
-      // Transform response format
+      // Transform response format (map id to userId for frontend compatibility)
       return {
-        users: response.data.users?.map((u) => ({
+        users: response.data.users?.map((u): UserListItem => ({
           userId: u.id,
           email: u.email,
           name: u.name,
-          isAdmin: u.is_admin || false,
-          totalTokens: u.total_tokens || 0,
-          totalCost: u.total_cost || 0,
-          lastActiveAt: u.last_active_at,
-          status: u.is_banned ? "banned" as const : "active" as const,
+          isAdmin: u.isAdmin || false,
+          totalTokens: u.totalTokens || 0,
+          totalCost: u.totalCost || 0,
+          lastActiveAt: u.lastActiveAt,
+          status: u.isBanned ? "banned" as const : "active" as const,
         })) || [],
         total: response.data.total || 0,
         limit: response.data.limit || params.limit || 20,
