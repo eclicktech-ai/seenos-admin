@@ -17,8 +17,8 @@
 # Build stage
 FROM node:20-alpine AS builder
 
-# Build argument for API URL (default: /api for Nginx proxy)
-ARG VITE_API_URL=/api
+# Build argument for API URL (default: /api/v1 for Nginx proxy)
+ARG VITE_API_URL=/api/v1
 ENV VITE_API_URL=${VITE_API_URL}
 
 # Enable corepack for yarn
