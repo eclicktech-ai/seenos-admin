@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "/api/v1";
 
 export const STORAGE_KEYS = {
   TOKEN: "admin_token",
